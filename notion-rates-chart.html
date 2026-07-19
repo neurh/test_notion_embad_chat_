@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rates Ledger</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0B0D12;
+    --panel: #12151C;
+    --line: #1F2430;
+    --text: #E7E9EE;
+    --muted: #7A8091;
+    --accent: #D4A24C;
+    --up: #4DBE8E;
+    --down: #E8687A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    height: 100%;
+  }
+
+  body {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+  }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .updated {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: left;
+  }
+
+  .ticker-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ticker {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 140px;
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .ticker-info { display: flex; flex-direction: column; gap: 2px; }
+
+  .ticker-name {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .ticker-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .ticker-delta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+  }
+
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .flat { color: var(--muted); }
+
+  .chart-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    flex: 1;
+    min-height: 320px;
+    position: relative;
+  }
+
+  #status {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+  }
+
+  canvas { max-height: 380px; }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <div class="eyebrow">Ledger · Live</div>
+      <h1>أسعار البنوك عبر الزمن</h1>
+    </div>
+    <div class="updated" id="updated-at">— جاري التحميل —</div>
+  </div>
+
+  <div class="ticker-row" id="ticker-row"></div>
+
+  <div class="chart-panel">
+    <div id="status">جاري سحب البيانات...</div>
+    <canvas id="ratesChart"></canvas>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+  <script>
+    // ==== عدّل هذا الرابط بـ Web App URL بتاعك من Apps Script ====
+    const API_URL = "ضع_رابط_Web_App_هنا";
+
+    const PALETTE = ["#5B8DEF", "#E8687A", "#4DBE8E", "#D4A24C", "#B98EFF", "#4DD9C0", "#F0A868", "#8A93A6"];
+
+    async function loadData() {
+      const statusEl = document.getElementById('status');
+      try {
+        const res = await fetch(API_URL);
+        const raw = await res.json();
+
+        if (raw.error) throw new Error(JSON.stringify(raw.error));
+        if (!Array.isArray(raw) || raw.length === 0) throw new Error("لا توجد بيانات");
+
+        renderTickers(raw);
+        renderChart(raw);
+        document.getElementById('updated-at').textContent =
+          "آخر تحديث: " + new Date().toLocaleString('ar-EG');
+        statusEl.style.display = 'none';
+      } catch (err) {
+        statusEl.textContent = "خطأ في تحميل البيانات: " + err.message;
+      }
+    }
+
+    function groupByBank(records) {
+      const banks = {};
+      records.forEach(r => {
+        if (!banks[r.bank]) banks[r.bank] = [];
+        banks[r.bank].push(r);
+      });
+      Object.values(banks).forEach(arr => arr.sort((a, b) => new Date(a.date) - new Date(b.date)));
+      return banks;
+    }
+
+    function renderTickers(records) {
+      const banks = groupByBank(records);
+      const row = document.getElementById('ticker-row');
+      row.innerHTML = '';
+
+      Object.keys(banks).forEach((bank, i) => {
+        const series = banks[bank];
+        const last = series[series.length - 1].rate;
+        const prev = series.length > 1 ? series[series.length - 2].rate : last;
+        const delta = last - prev;
+        const trendClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+        const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '—';
+
+        const el = document.createElement('div');
+        el.className = 'ticker';
+        el.innerHTML = `
+          <div class="dot" style="background:${PALETTE[i % PALETTE.length]}"></div>
+          <div class="ticker-info">
+            <div class="ticker-name">${bank}</div>
+            <div class="ticker-value">${last}</div>
+            <div class="ticker-delta ${trendClass}">${arrow} ${Math.abs(delta).toFixed(2)}</div>
+          </div>`;
+        row.appendChild(el);
+      });
+    }
+
+    function renderChart(records) {
+      const banks = groupByBank(records);
+      const allDates = [...new Set(records.map(r => r.date))].sort((a, b) => new Date(a) - new Date(b));
+
+      const datasets = Object.keys(banks).map((bank, i) => {
+        const color = PALETTE[i % PALETTE.length];
+        const map = {};
+        banks[bank].forEach(r => map[r.date] = r.rate);
+        return {
+          label: bank,
+          data: allDates.map(d => map[d] ?? null),
+          borderColor: color,
+          backgroundColor: color,
+          spanGaps: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          borderWidth: 2
+        };
+      });
+
+      new Chart(document.getElementById('ratesChart'), {
+        type: 'line',
+        data: {
+          labels: allDates.map(d => new Date(d).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })),
+          datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: '#E7E9EE', font: { family: 'Inter', size: 12 } }
+            },
+            tooltip: {
+              backgroundColor: '#12151C',
+              borderColor: '#1F2430',
+              borderWidth: 1,
+              titleColor: '#E7E9EE',
+              bodyColor: '#E7E9EE',
+              padding: 10
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: '#1F2430' },
+              ticks: { color: '#7A8091', font: { family: 'IBM Plex Mono', size: 10 } }
+            },
+            y: {
+              grid: { color: '#1F2430' },
+              ticks: { color: '#7A8091', font: { family: 'IBM Plex Mono', size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    loadData();
+    setInterval(loadData, 5 * 60 * 1000); // يحدث كل 5 دقائق
+  </script>
+</body>
+</html>
