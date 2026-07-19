@@ -15,8 +15,6 @@
     --text: #E7E9EE;
     --muted: #7A8091;
     --accent: #D4A24C;
-    --up: #4DBE8E;
-    --down: #E8687A;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,60 +23,24 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
-    min-height: 100%;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
   }
 
-  body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
-
-  .header {
-    display: flex; justify-content: space-between; align-items: baseline;
-    border-bottom: 1px solid var(--line); padding-bottom: 14px;
-  }
-
-  .eyebrow {
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
-    color: var(--accent); text-transform: uppercase; margin-bottom: 4px;
-  }
-
-  h1 { font-size: 20px; font-weight: 700; }
-
-  .panel {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 16px 18px;
-  }
-
-  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-
-  .field { display: flex; flex-direction: column; gap: 6px; min-width: 160px; flex: 1; }
-
-  label {
-    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.05em;
-    color: var(--muted); text-transform: uppercase;
-  }
-
-  input, select {
-    background: var(--panel2); border: 1px solid var(--line); color: var(--text);
-    padding: 9px 10px; border-radius: 7px; font-family: 'Inter', sans-serif; font-size: 13px;
-    outline: none;
-  }
-
-  input:focus, select:focus { border-color: var(--accent); }
-
-  button {
-    background: var(--accent); color: #12151C; border: none; padding: 9px 16px;
-    border-radius: 7px; font-weight: 600; font-size: 13px; cursor: pointer;
-    font-family: 'Inter', sans-serif;
-  }
-
-  button:hover { filter: brightness(1.08); }
-
-  button.secondary {
-    background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+  /* ==== حاوية الشارت بملء الشاشة ==== */
+  .chart-wrap {
+    position: fixed;
+    inset: 0;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
   }
 
   .chart-panel {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 20px; flex: 1; min-height: 360px; position: relative;
+    flex: 1;
+    position: relative;
+    min-height: 0;
   }
 
   #status {
@@ -87,41 +49,157 @@
     text-align: center; padding: 20px;
   }
 
-  canvas { max-height: 400px; }
+  canvas { width: 100% !important; height: 100% !important; }
 
-  .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  /* ==== منطقة الهوفر لإظهار زر الإعدادات ==== */
+  .hover-zone {
+    position: fixed;
+    top: 0; right: 0;
+    width: 90px; height: 90px;
+    z-index: 50;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 12px;
+  }
+
+  .settings-btn {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .hover-zone:hover .settings-btn,
+  .settings-btn.force-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .settings-btn svg { width: 17px; height: 17px; stroke: var(--muted); }
+  .settings-btn:hover svg { stroke: var(--accent); }
+
+  /* ==== لوحة الإعدادات (Overlay) ==== */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(6,7,10,0.55);
+    display: none;
+    align-items: flex-start;
+    justify-content: flex-end;
+    z-index: 100;
+    padding: 20px;
+  }
+
+  .overlay.open { display: flex; }
+
+  .settings-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    width: 340px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  }
+
+  .settings-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--line); padding-bottom: 10px;
+  }
+
+  .settings-header h2 { font-size: 14px; font-weight: 600; }
+
+  .close-btn {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--panel2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .close-btn svg { width: 13px; height: 13px; stroke: var(--muted); }
+  .close-btn:hover svg { stroke: var(--text); }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.05em;
+    color: var(--muted); text-transform: uppercase;
+  }
+
+  input, select {
+    background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+    padding: 8px 9px; border-radius: 7px; font-family: 'Inter', sans-serif; font-size: 12.5px;
+    outline: none; width: 100%;
+  }
+
+  input:focus, select:focus { border-color: var(--accent); }
+
+  button.primary {
+    background: var(--accent); color: #12151C; border: none; padding: 9px 12px;
+    border-radius: 7px; font-weight: 600; font-size: 12.5px; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+
+  .hint { font-size: 10.5px; color: var(--muted); line-height: 1.5; }
+
+  .divider { height: 1px; background: var(--line); margin: 2px 0; }
 </style>
 </head>
 <body>
 
-  <div class="header">
-    <div>
-      <div class="eyebrow">Notion · Chart Studio</div>
-      <h1>استوديو الشارتات من Notion</h1>
+  <!-- ==== الشارت (كل ما يظهر افتراضياً) ==== -->
+  <div class="chart-wrap">
+    <div class="chart-panel">
+      <div id="status">جاري التحميل...</div>
+      <canvas id="chartCanvas"></canvas>
     </div>
   </div>
 
-  <!-- إعداد الاتصال -->
-  <div class="panel">
-    <div class="row">
-      <div class="field" style="flex: 3;">
+  <!-- ==== أيقونة الإعدادات (تظهر عند تمرير الماوس أعلى يمين الصفحة) ==== -->
+  <div class="hover-zone">
+    <div class="settings-btn" id="settingsBtn" title="الإعدادات">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ==== لوحة الإعدادات ==== -->
+  <div class="overlay" id="overlay">
+    <div class="settings-panel">
+      <div class="settings-header">
+        <h2>إعدادات الشارت</h2>
+        <div class="close-btn" id="closeBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </div>
+      </div>
+
+      <div class="field">
         <label>Web App URL</label>
         <input id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
       </div>
-      <div class="field" style="flex: 0 0 auto;">
-        <button id="connectBtn">اتصال وجلب القواعد</button>
-      </div>
-    </div>
-    <div class="hint">هذا الرابط بياتك محفوظ في المتصفح بس، مش بيتشارك مع حد.</div>
-  </div>
+      <button class="primary" id="connectBtn">اتصال وجلب القواعد</button>
+      <div class="hint">الرابط محفوظ في المتصفح بس، مش بيتشارك مع حد.</div>
 
-  <!-- اختيار قاعدة البيانات والأعمدة -->
-  <div class="panel" id="configPanel" style="display:none;">
-    <div class="row">
+      <div class="divider"></div>
+
       <div class="field">
         <label>قاعدة البيانات</label>
         <select id="dbSelect"></select>
       </div>
+
       <div class="field">
         <label>نوع الشارت</label>
         <select id="chartType">
@@ -130,22 +208,22 @@
           <option value="pie">دائري (Pie)</option>
         </select>
       </div>
-    </div>
-    <div class="row">
+
       <div class="field">
         <label>المحور الأفقي / التصنيف (X)</label>
         <select id="xField"></select>
       </div>
+
       <div class="field">
         <label>التقسيم حسب (Series) — اختياري</label>
-        <select id="seriesField">
-          <option value="">بدون تقسيم</option>
-        </select>
+        <select id="seriesField"><option value="">بدون تقسيم</option></select>
       </div>
+
       <div class="field">
         <label>القيمة (Y)</label>
         <select id="valueField"></select>
       </div>
+
       <div class="field">
         <label>التجميع</label>
         <select id="aggType">
@@ -155,15 +233,9 @@
           <option value="last">آخر قيمة</option>
         </select>
       </div>
-      <div class="field" style="flex: 0 0 auto;">
-        <button id="renderBtn">ارسم الشارت</button>
-      </div>
-    </div>
-  </div>
 
-  <div class="chart-panel">
-    <div id="status">ابدأ بإدخال رابط الـ Web App واضغط "اتصال"</div>
-    <canvas id="chartCanvas"></canvas>
+      <button class="primary" id="renderBtn">حفظ وعرض الشارت</button>
+    </div>
   </div>
 
   <!-- المكتبة محمّلة محلياً من نفس المجلد -->
@@ -176,56 +248,67 @@
 
     const $ = id => document.getElementById(id);
     const statusEl = $('status');
+    const overlay = $('overlay');
+    const settingsBtn = $('settingsBtn');
 
-    // ==== تحميل الإعدادات المحفوظة ====
+    // فتح/قفل لوحة الإعدادات
+    settingsBtn.addEventListener('click', () => overlay.classList.add('open'));
+    $('closeBtn').addEventListener('click', () => overlay.classList.remove('open'));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+
     window.addEventListener('load', () => {
       const savedUrl = localStorage.getItem('notion_studio_api_url');
       if (savedUrl) {
         $('apiUrl').value = savedUrl;
-        connect();
+        connect(true); // اتصال صامت، بدون فتح اللوحة
+      } else {
+        // أول مرة: افتح اللوحة تلقائياً عشان يدخل الإعدادات
+        overlay.classList.add('open');
+        setStatus('من فضلك اضبط الإعدادات من الأيقونة أعلى يمين الصفحة');
       }
     });
 
-    $('connectBtn').addEventListener('click', connect);
+    $('connectBtn').addEventListener('click', () => connect(false));
     $('dbSelect').addEventListener('change', onDatabaseChange);
     $('renderBtn').addEventListener('click', () => {
       saveConfig();
       renderChart();
+      overlay.classList.remove('open');
     });
 
-    async function connect() {
+    async function connect(silent) {
       const apiUrl = $('apiUrl').value.trim();
-      if (!apiUrl) { setStatus('من فضلك أدخل رابط الـ Web App'); return; }
+      if (!apiUrl) { if (!silent) setStatus('من فضلك أدخل رابط الـ Web App'); return; }
       localStorage.setItem('notion_studio_api_url', apiUrl);
 
-      setStatus('جاري جلب قواعد البيانات...');
+      if (!silent) setStatus('جاري جلب قواعد البيانات...');
       try {
         const res = await fetch(apiUrl + '?action=list_databases');
         const dbs = await res.json();
         if (dbs.error) throw new Error(JSON.stringify(dbs.error));
         if (!Array.isArray(dbs) || dbs.length === 0) {
-          throw new Error('لا توجد قواعد بيانات موصولة. تأكد إنك ربطت الـ integration بالـ database من Notion (Connections).');
+          throw new Error('لا توجد قواعد بيانات موصولة. اربط الـ integration بالـ database من Notion.');
         }
 
         $('dbSelect').innerHTML = dbs.map(d => `<option value="${d.id}">${d.title}</option>`).join('');
-        $('configPanel').style.display = 'block';
 
         const savedDbId = localStorage.getItem('notion_studio_last_db');
         if (savedDbId && dbs.some(d => d.id === savedDbId)) {
           $('dbSelect').value = savedDbId;
         }
-        await onDatabaseChange();
+        await onDatabaseChange(silent);
       } catch (err) {
         setStatus('خطأ: ' + err.message);
+        overlay.classList.add('open');
       }
     }
 
-    async function onDatabaseChange() {
+    async function onDatabaseChange(silent) {
       const apiUrl = $('apiUrl').value.trim();
       const dbId = $('dbSelect').value;
       if (!dbId) return;
 
-      setStatus('جاري تحميل البيانات...');
+      if (!silent) setStatus('جاري تحميل البيانات...');
       try {
         const res = await fetch(apiUrl + '?action=get_data&database_id=' + encodeURIComponent(dbId));
         const records = await res.json();
@@ -242,7 +325,6 @@
         $('valueField').innerHTML = opts;
         $('seriesField').innerHTML = '<option value="">بدون تقسيم</option>' + opts;
 
-        // استرجاع آخر إعداد محفوظ لنفس القاعدة
         const saved = JSON.parse(localStorage.getItem('notion_studio_config_' + dbId) || 'null');
         if (saved) {
           $('xField').value = saved.xField || columns[0];
@@ -251,11 +333,12 @@
           $('chartType').value = saved.chartType || 'line';
           $('aggType').value = saved.aggType || 'sum';
           renderChart();
-        } else {
-          setStatus('اختر الأعمدة واضغط "ارسم الشارت"');
+        } else if (!silent) {
+          setStatus('اختر الأعمدة واضغط "حفظ وعرض الشارت"');
         }
       } catch (err) {
         setStatus('خطأ: ' + err.message);
+        overlay.classList.add('open');
       }
     }
 
@@ -316,7 +399,6 @@
             }
           };
         } else {
-          // line / bar
           const xValues = [...new Set(currentRecords.map(r => r[xField]))]
             .sort((a, b) => (new Date(a) - new Date(b)) || String(a).localeCompare(String(b)));
 
