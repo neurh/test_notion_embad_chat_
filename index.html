@@ -54,12 +54,12 @@
   /* ==== منطقة الهوفر لإظهار زر الإعدادات ==== */
   .hover-zone {
     position: fixed;
-    top: 0; right: 0;
+    top: 0; left: 0;
     width: 90px; height: 90px;
     z-index: 50;
     display: flex;
     align-items: flex-start;
-    justify-content: flex-end;
+    justify-content: flex-start;
     padding: 12px;
   }
 
@@ -90,7 +90,7 @@
     background: rgba(6,7,10,0.55);
     display: none;
     align-items: flex-start;
-    justify-content: flex-end;
+    justify-content: flex-start;
     z-index: 100;
     padding: 20px;
   }
@@ -234,7 +234,7 @@
         </select>
       </div>
 
-      <button class="primary" id="renderBtn">حفظ وعرض الشارت</button>
+      <button class="primary" id="renderBtn">إغلاق اللوحة</button>
     </div>
   </div>
 
@@ -270,6 +270,17 @@
 
     $('connectBtn').addEventListener('click', () => connect(false));
     $('dbSelect').addEventListener('change', onDatabaseChange);
+
+    // أي تغيير في الإعدادات يحدّث الشارت فوراً بدون الحاجة لزر
+    ['chartType', 'xField', 'seriesField', 'valueField', 'aggType'].forEach(id => {
+      $(id).addEventListener('change', () => {
+        if (!columns.length) return;
+        saveConfig();
+        renderChart();
+      });
+    });
+
+    // الزر بقى بس لإغلاق اللوحة (الشارت بيتحدث لحظياً أصلاً)
     $('renderBtn').addEventListener('click', () => {
       saveConfig();
       renderChart();
