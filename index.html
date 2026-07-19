@@ -11,9 +11,11 @@
     --bg: #0B0D12;
     --panel: #12151C;
     --panel2: #171B24;
-    --line: #1F2430;
+    --panel3: #1C212C;
+    --line: #232838;
     --text: #E7E9EE;
     --muted: #7A8091;
+    --muted-dim: #545A6B;
     --accent: #D4A24C;
   }
 
@@ -28,103 +30,90 @@
     overflow: hidden;
   }
 
-  /* ==== حاوية الشارت بملء الشاشة ==== */
-  .chart-wrap {
-    position: fixed;
-    inset: 0;
-    padding: 18px 22px;
-    display: flex;
-    flex-direction: column;
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+  /* ==== حاوية الشارت ==== */
+  .chart-wrap { position: fixed; inset: 0; padding: 22px; display: flex; flex-direction: column; gap: 10px; }
+
+  .chart-title {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    padding-right: 6px; display: none;
   }
 
-  .chart-panel {
-    flex: 1;
-    position: relative;
-    min-height: 0;
-  }
+  .chart-panel { flex: 1; position: relative; min-height: 0; }
 
   #status {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 13px;
-    text-align: center; padding: 20px;
+    color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;
+    text-align: center; padding: 20px; line-height: 1.7;
   }
 
   canvas { width: 100% !important; height: 100% !important; }
 
-  /* ==== منطقة الهوفر لإظهار زر الإعدادات ==== */
+  .updated-badge {
+    position: absolute; bottom: 4px; left: 4px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted-dim);
+    pointer-events: none;
+  }
+
+  /* ==== زر الإعدادات ==== */
   .hover-zone {
-    position: fixed;
-    top: 0; left: 0;
-    width: 90px; height: 90px;
-    z-index: 50;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding: 12px;
+    position: fixed; top: 0; left: 0; width: 90px; height: 90px; z-index: 50;
+    display: flex; align-items: flex-start; justify-content: flex-start; padding: 14px;
   }
 
   .settings-btn {
-    width: 34px; height: 34px;
-    border-radius: 9px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    opacity: 0;
-    transform: translateY(-6px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    width: 32px; height: 32px; border-radius: 9px;
+    background: var(--panel); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    opacity: 0; transform: translateY(-6px) scale(0.9);
+    transition: opacity 0.18s ease, transform 0.18s ease, background 0.15s ease;
   }
 
-  .hover-zone:hover .settings-btn,
-  .settings-btn.force-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .settings-btn svg { width: 17px; height: 17px; stroke: var(--muted); }
+  .hover-zone:hover .settings-btn { opacity: 1; transform: translateY(0) scale(1); }
+  .settings-btn:hover { background: var(--panel2); }
+  .settings-btn svg { width: 16px; height: 16px; stroke: var(--muted); }
   .settings-btn:hover svg { stroke: var(--accent); }
 
-  /* ==== لوحة الإعدادات (Overlay) ==== */
+  /* ==== لوحة الإعدادات ==== */
   .overlay {
-    position: fixed; inset: 0;
-    background: rgba(6,7,10,0.55);
-    display: none;
-    align-items: flex-start;
-    justify-content: flex-start;
-    z-index: 100;
-    padding: 20px;
+    position: fixed; inset: 0; background: rgba(5,6,9,0.6); backdrop-filter: blur(2px);
+    display: none; align-items: flex-start; justify-content: flex-start; z-index: 100; padding: 18px;
   }
-
   .overlay.open { display: flex; }
 
   .settings-panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 18px;
-    width: 340px;
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    padding: 16px; width: 360px; max-height: calc(100vh - 36px); overflow-y: auto;
+    display: flex; flex-direction: column; gap: 16px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    animation: pop 0.16s ease;
   }
+  @keyframes pop { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-  .settings-header {
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid var(--line); padding-bottom: 10px;
-  }
-
-  .settings-header h2 { font-size: 14px; font-weight: 600; }
+  .settings-header { display: flex; justify-content: space-between; align-items: center; }
+  .settings-header h2 { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
 
   .close-btn {
-    width: 26px; height: 26px; border-radius: 7px;
-    background: var(--panel2); border: 1px solid var(--line);
+    width: 26px; height: 26px; border-radius: 7px; background: var(--panel2); border: 1px solid var(--line);
     display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
   .close-btn svg { width: 13px; height: 13px; stroke: var(--muted); }
   .close-btn:hover svg { stroke: var(--text); }
+
+  /* تابات */
+  .tabs { display: flex; gap: 3px; background: var(--panel2); padding: 3px; border-radius: 10px; }
+  .tab {
+    flex: 1; text-align: center; padding: 7px 4px; border-radius: 8px; cursor: pointer;
+    font-size: 11.5px; color: var(--muted); font-weight: 500; transition: all 0.15s ease;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .tab svg { width: 13px; height: 13px; stroke: currentColor; }
+  .tab.active { background: var(--panel3); color: var(--accent); }
+
+  .tab-content { display: none; flex-direction: column; gap: 12px; }
+  .tab-content.active { display: flex; }
 
   .field { display: flex; flex-direction: column; gap: 5px; }
 
@@ -133,37 +122,63 @@
     color: var(--muted); text-transform: uppercase;
   }
 
-  input, select {
+  input[type=text], input[type=url], input[type=number], select {
     background: var(--panel2); border: 1px solid var(--line); color: var(--text);
-    padding: 8px 9px; border-radius: 7px; font-family: 'Inter', sans-serif; font-size: 12.5px;
-    outline: none; width: 100%;
+    padding: 8px 9px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 12.5px;
+    outline: none; width: 100%; transition: border-color 0.15s ease;
   }
-
   input:focus, select:focus { border-color: var(--accent); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .switch-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  }
+  .switch-row label { text-transform: none; font-family: 'Inter', sans-serif; font-size: 12.5px; color: var(--text); letter-spacing: normal; }
+
+  .switch { position: relative; width: 34px; height: 19px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: var(--line); border-radius: 20px; cursor: pointer; transition: 0.2s;
+  }
+  .slider::before {
+    content: ""; position: absolute; width: 14px; height: 14px; left: 3px; top: 2.5px;
+    background: var(--muted); border-radius: 50%; transition: 0.2s;
+  }
+  .switch input:checked + .slider { background: rgba(212,162,76,0.25); }
+  .switch input:checked + .slider::before { transform: translateX(-15px); background: var(--accent); }
+
+  .swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 8px; cursor: pointer; border: 2px solid transparent;
+    display: flex; overflow: hidden;
+  }
+  .swatch span { flex: 1; }
+  .swatch.active { border-color: var(--text); }
 
   button.primary {
     background: var(--accent); color: #12151C; border: none; padding: 9px 12px;
-    border-radius: 7px; font-weight: 600; font-size: 12.5px; cursor: pointer;
-    font-family: 'Inter', sans-serif;
+    border-radius: 9px; font-weight: 600; font-size: 12.5px; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: filter 0.15s ease;
   }
-  button.primary:hover { filter: brightness(1.08); }
+  button.primary:hover { filter: brightness(1.1); }
 
-  .hint { font-size: 10.5px; color: var(--muted); line-height: 1.5; }
-
-  .divider { height: 1px; background: var(--line); margin: 2px 0; }
+  .hint { font-size: 10.5px; color: var(--muted-dim); line-height: 1.5; }
+  .divider { height: 1px; background: var(--line); margin: 0; }
 </style>
 </head>
 <body>
 
-  <!-- ==== الشارت (كل ما يظهر افتراضياً) ==== -->
   <div class="chart-wrap">
+    <div class="chart-title" id="chartTitleEl"></div>
     <div class="chart-panel">
       <div id="status">جاري التحميل...</div>
       <canvas id="chartCanvas"></canvas>
+      <div class="updated-badge" id="updatedBadge"></div>
     </div>
   </div>
 
-  <!-- ==== أيقونة الإعدادات (تظهر عند تمرير الماوس أعلى يمين الصفحة) ==== -->
   <div class="hover-zone">
     <div class="settings-btn" id="settingsBtn" title="الإعدادات">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -173,85 +188,187 @@
     </div>
   </div>
 
-  <!-- ==== لوحة الإعدادات ==== -->
   <div class="overlay" id="overlay">
     <div class="settings-panel">
       <div class="settings-header">
         <h2>إعدادات الشارت</h2>
         <div class="close-btn" id="closeBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </div>
       </div>
 
-      <div class="field">
-        <label>Web App URL</label>
-        <input id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
-      </div>
-      <button class="primary" id="connectBtn">اتصال وجلب القواعد</button>
-      <div class="hint">الرابط محفوظ في المتصفح بس، مش بيتشارك مع حد.</div>
-
-      <div class="divider"></div>
-
-      <div class="field">
-        <label>قاعدة البيانات</label>
-        <select id="dbSelect"></select>
-      </div>
-
-      <div class="field">
-        <label>نوع الشارت</label>
-        <select id="chartType">
-          <option value="line">خطي (Line)</option>
-          <option value="bar">أعمدة (Bar)</option>
-          <option value="pie">دائري (Pie)</option>
-        </select>
+      <div class="tabs">
+        <div class="tab active" data-tab="source">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14a9 3 0 0 0 18 0V5"></path></svg>
+          المصدر
+        </div>
+        <div class="tab" data-tab="data">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="19" x2="4" y2="10"></line><line x1="12" y1="19" x2="12" y2="4"></line><line x1="20" y1="19" x2="20" y2="14"></line></svg>
+          البيانات
+        </div>
+        <div class="tab" data-tab="style">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.2-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-4.4-4.5-8-10-8z"></path></svg>
+          المظهر
+        </div>
       </div>
 
-      <div class="field">
-        <label>المحور الأفقي / التصنيف (X)</label>
-        <select id="xField"></select>
+      <!-- تاب المصدر -->
+      <div class="tab-content active" data-tab-content="source">
+        <div class="field">
+          <label>Web App / Worker URL</label>
+          <input type="url" id="apiUrl" placeholder="https://your-worker.workers.dev">
+        </div>
+        <button class="primary" id="connectBtn">اتصال وجلب القواعد</button>
+        <div class="divider"></div>
+        <div class="field">
+          <label>قاعدة البيانات</label>
+          <select id="dbSelect"></select>
+        </div>
+        <div class="hint">الرابط محفوظ في متصفحك فقط.</div>
       </div>
 
-      <div class="field">
-        <label>التقسيم حسب (Series) — اختياري</label>
-        <select id="seriesField"><option value="">بدون تقسيم</option></select>
+      <!-- تاب البيانات -->
+      <div class="tab-content" data-tab-content="data">
+        <div class="field">
+          <label>نوع الشارت</label>
+          <select id="chartType">
+            <option value="line">خطي (Line)</option>
+            <option value="area">مساحي (Area)</option>
+            <option value="bar">أعمدة (Bar)</option>
+            <option value="pie">دائري (Pie)</option>
+            <option value="doughnut">دونات (Doughnut)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>المحور الأفقي / التصنيف (X)</label>
+          <select id="xField"></select>
+        </div>
+        <div class="field">
+          <label>التقسيم حسب (Series) — اختياري</label>
+          <select id="seriesField"><option value="">بدون تقسيم</option></select>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>القيمة (Y)</label>
+            <select id="valueField"></select>
+          </div>
+          <div class="field">
+            <label>التجميع</label>
+            <select id="aggType">
+              <option value="sum">مجموع</option>
+              <option value="avg">متوسط</option>
+              <option value="count">عدد</option>
+              <option value="last">آخر قيمة</option>
+              <option value="min">أقل قيمة</option>
+              <option value="max">أعلى قيمة</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div class="field">
-        <label>القيمة (Y)</label>
-        <select id="valueField"></select>
-      </div>
+      <!-- تاب المظهر -->
+      <div class="tab-content" data-tab-content="style">
+        <div class="field">
+          <label>عنوان الشارت (اختياري)</label>
+          <input type="text" id="chartTitle" placeholder="مثال: أسعار البنوك 2026">
+        </div>
 
-      <div class="field">
-        <label>التجميع</label>
-        <select id="aggType">
-          <option value="sum">مجموع</option>
-          <option value="avg">متوسط</option>
-          <option value="count">عدد</option>
-          <option value="last">آخر قيمة</option>
-        </select>
-      </div>
+        <div class="field">
+          <label>مجموعة الألوان</label>
+          <div class="swatches" id="paletteSwatches"></div>
+        </div>
 
-      <button class="primary" id="renderBtn">إغلاق اللوحة</button>
+        <div class="row2">
+          <div class="field">
+            <label>سُمك الخط</label>
+            <select id="lineWidth">
+              <option value="1.5">رفيع</option>
+              <option value="2" selected>متوسط</option>
+              <option value="3">سميك</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>استدارة زوايا الأعمدة</label>
+            <select id="cornerRadius">
+              <option value="0">بدون</option>
+              <option value="4" selected>خفيفة</option>
+              <option value="10">كاملة</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="switch-row">
+          <label>خطوط منحنية (Smooth)</label>
+          <label class="switch"><input type="checkbox" id="smoothLines" checked><span class="slider"></span></label>
+        </div>
+        <div class="switch-row">
+          <label>إظهار النقاط على الخط</label>
+          <label class="switch"><input type="checkbox" id="showPoints" checked><span class="slider"></span></label>
+        </div>
+        <div class="switch-row">
+          <label>إظهار الأسطورة (Legend)</label>
+          <label class="switch"><input type="checkbox" id="showLegend" checked><span class="slider"></span></label>
+        </div>
+        <div class="switch-row">
+          <label>إظهار خطوط الشبكة</label>
+          <label class="switch"><input type="checkbox" id="showGrid" checked><span class="slider"></span></label>
+        </div>
+        <div class="switch-row">
+          <label>تعبئة تحت الخط (Fill)</label>
+          <label class="switch"><input type="checkbox" id="fillArea"><span class="slider"></span></label>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- المكتبة محمّلة محلياً من نفس المجلد -->
   <script src="chart.umd.js"></script>
   <script>
-    const PALETTE = ["#5B8DEF", "#E8687A", "#4DBE8E", "#D4A24C", "#B98EFF", "#4DD9C0", "#F0A868", "#8A93A6"];
+    const PALETTES = {
+      default:  ["#5B8DEF", "#E8687A", "#4DBE8E", "#D4A24C", "#B98EFF", "#4DD9C0", "#F0A868", "#8A93A6"],
+      warm:     ["#E8687A", "#F0A868", "#D4A24C", "#E8B54B", "#C9704F", "#B9895E", "#DD8E6B", "#9C6B4F"],
+      cool:     ["#5B8DEF", "#4DD9C0", "#4DBE8E", "#6FA8DC", "#8FB8E8", "#5CC8D9", "#7C93E8", "#3E9E8F"],
+      mono:     ["#D4A24C", "#B98F52", "#9E7C58", "#84695D", "#6A5661", "#504365", "#8A93A6", "#545A6B"]
+    };
+
     let currentChart = null;
     let currentRecords = [];
     let columns = [];
+    let activePalette = 'default';
 
     const $ = id => document.getElementById(id);
     const statusEl = $('status');
     const overlay = $('overlay');
     const settingsBtn = $('settingsBtn');
 
-    // فتح/قفل لوحة الإعدادات
+    // ==== تابات ====
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelector(`.tab-content[data-tab-content="${tab.dataset.tab}"]`).classList.add('active');
+      });
+    });
+
+    // ==== سواتشات الألوان ====
+    function renderPaletteSwatches() {
+      const wrap = $('paletteSwatches');
+      wrap.innerHTML = '';
+      Object.keys(PALETTES).forEach(key => {
+        const el = document.createElement('div');
+        el.className = 'swatch' + (key === activePalette ? ' active' : '');
+        el.dataset.palette = key;
+        el.innerHTML = PALETTES[key].slice(0, 4).map(c => `<span style="background:${c}"></span>`).join('');
+        el.addEventListener('click', () => {
+          activePalette = key;
+          renderPaletteSwatches();
+          if (columns.length) { saveConfig(); renderChart(); }
+        });
+        wrap.appendChild(el);
+      });
+    }
+    renderPaletteSwatches();
+
     settingsBtn.addEventListener('click', () => overlay.classList.add('open'));
     $('closeBtn').addEventListener('click', () => overlay.classList.remove('open'));
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
@@ -260,36 +377,34 @@
       const savedUrl = localStorage.getItem('notion_studio_api_url');
       if (savedUrl) {
         $('apiUrl').value = savedUrl;
-        connect(true); // اتصال صامت، بدون فتح اللوحة
+        connect(true);
       } else {
-        // أول مرة: افتح اللوحة تلقائياً عشان يدخل الإعدادات
         overlay.classList.add('open');
-        setStatus('من فضلك اضبط الإعدادات من الأيقونة أعلى يمين الصفحة');
+        setStatus('اضبط رابط الـ API من تاب "المصدر"');
       }
     });
 
     $('connectBtn').addEventListener('click', () => connect(false));
     $('dbSelect').addEventListener('change', onDatabaseChange);
 
-    // أي تغيير في الإعدادات يحدّث الشارت فوراً بدون الحاجة لزر
-    ['chartType', 'xField', 'seriesField', 'valueField', 'aggType'].forEach(id => {
+    const AUTO_IDS = ['chartType', 'xField', 'seriesField', 'valueField', 'aggType',
+      'lineWidth', 'cornerRadius', 'smoothLines', 'showPoints', 'showLegend', 'showGrid', 'fillArea'];
+    AUTO_IDS.forEach(id => {
       $(id).addEventListener('change', () => {
         if (!columns.length) return;
         saveConfig();
         renderChart();
       });
     });
-
-    // الزر بقى بس لإغلاق اللوحة (الشارت بيتحدث لحظياً أصلاً)
-    $('renderBtn').addEventListener('click', () => {
-      saveConfig();
-      renderChart();
-      overlay.classList.remove('open');
+    $('chartTitle').addEventListener('input', () => {
+      $('chartTitleEl').textContent = $('chartTitle').value;
+      $('chartTitleEl').style.display = $('chartTitle').value ? 'block' : 'none';
+      if (columns.length) saveConfig();
     });
 
     async function connect(silent) {
       const apiUrl = $('apiUrl').value.trim();
-      if (!apiUrl) { if (!silent) setStatus('من فضلك أدخل رابط الـ Web App'); return; }
+      if (!apiUrl) { if (!silent) setStatus('من فضلك أدخل رابط الـ API'); return; }
       localStorage.setItem('notion_studio_api_url', apiUrl);
 
       if (!silent) setStatus('جاري جلب قواعد البيانات...');
@@ -304,9 +419,8 @@
         $('dbSelect').innerHTML = dbs.map(d => `<option value="${d.id}">${d.title}</option>`).join('');
 
         const savedDbId = localStorage.getItem('notion_studio_last_db');
-        if (savedDbId && dbs.some(d => d.id === savedDbId)) {
-          $('dbSelect').value = savedDbId;
-        }
+        if (savedDbId && dbs.some(d => d.id === savedDbId)) $('dbSelect').value = savedDbId;
+
         await onDatabaseChange(silent);
       } catch (err) {
         setStatus('خطأ: ' + err.message);
@@ -324,9 +438,7 @@
         const res = await fetch(apiUrl + '?action=get_data&database_id=' + encodeURIComponent(dbId));
         const records = await res.json();
         if (records.error) throw new Error(JSON.stringify(records.error));
-        if (!Array.isArray(records) || records.length === 0) {
-          throw new Error('لا توجد صفوف في هذه القاعدة.');
-        }
+        if (!Array.isArray(records) || records.length === 0) throw new Error('لا توجد صفوف في هذه القاعدة.');
 
         currentRecords = records;
         columns = Object.keys(records[0]);
@@ -337,20 +449,34 @@
         $('seriesField').innerHTML = '<option value="">بدون تقسيم</option>' + opts;
 
         const saved = JSON.parse(localStorage.getItem('notion_studio_config_' + dbId) || 'null');
-        if (saved) {
-          $('xField').value = saved.xField || columns[0];
-          $('seriesField').value = saved.seriesField || '';
-          $('valueField').value = saved.valueField || columns[0];
-          $('chartType').value = saved.chartType || 'line';
-          $('aggType').value = saved.aggType || 'sum';
-          renderChart();
-        } else if (!silent) {
-          setStatus('اختر الأعمدة واضغط "حفظ وعرض الشارت"');
-        }
+        if (saved) applySavedConfig(saved);
+        else if (!silent) setStatus('اختر الأعمدة من تاب "البيانات"');
+
+        renderChart();
       } catch (err) {
         setStatus('خطأ: ' + err.message);
         overlay.classList.add('open');
       }
+    }
+
+    function applySavedConfig(saved) {
+      $('xField').value = saved.xField || columns[0];
+      $('seriesField').value = saved.seriesField || '';
+      $('valueField').value = saved.valueField || columns[0];
+      $('chartType').value = saved.chartType || 'line';
+      $('aggType').value = saved.aggType || 'sum';
+      $('chartTitle').value = saved.chartTitle || '';
+      $('lineWidth').value = saved.lineWidth || '2';
+      $('cornerRadius').value = saved.cornerRadius || '4';
+      $('smoothLines').checked = saved.smoothLines !== false;
+      $('showPoints').checked = saved.showPoints !== false;
+      $('showLegend').checked = saved.showLegend !== false;
+      $('showGrid').checked = saved.showGrid !== false;
+      $('fillArea').checked = !!saved.fillArea;
+      activePalette = saved.palette || 'default';
+      renderPaletteSwatches();
+      $('chartTitleEl').textContent = saved.chartTitle || '';
+      $('chartTitleEl').style.display = saved.chartTitle ? 'block' : 'none';
     }
 
     function saveConfig() {
@@ -361,7 +487,16 @@
         seriesField: $('seriesField').value,
         valueField: $('valueField').value,
         chartType: $('chartType').value,
-        aggType: $('aggType').value
+        aggType: $('aggType').value,
+        chartTitle: $('chartTitle').value,
+        lineWidth: $('lineWidth').value,
+        cornerRadius: $('cornerRadius').value,
+        smoothLines: $('smoothLines').checked,
+        showPoints: $('showPoints').checked,
+        showLegend: $('showLegend').checked,
+        showGrid: $('showGrid').checked,
+        fillArea: $('fillArea').checked,
+        palette: activePalette
       }));
     }
 
@@ -372,6 +507,8 @@
       if (type === 'sum') return nums.reduce((a, b) => a + b, 0);
       if (type === 'avg') return nums.reduce((a, b) => a + b, 0) / nums.length;
       if (type === 'last') return nums[nums.length - 1];
+      if (type === 'min') return Math.min(...nums);
+      if (type === 'max') return Math.max(...nums);
       return nums.reduce((a, b) => a + b, 0);
     }
 
@@ -379,15 +516,26 @@
       const xField = $('xField').value;
       const seriesField = $('seriesField').value;
       const valueField = $('valueField').value;
-      const chartType = $('chartType').value;
+      const chartTypeRaw = $('chartType').value;
       const aggType = $('aggType').value;
+      const palette = PALETTES[activePalette];
+      const lineWidth = parseFloat($('lineWidth').value);
+      const cornerRadius = parseInt($('cornerRadius').value);
+      const smooth = $('smoothLines').checked;
+      const showPoints = $('showPoints').checked;
+      const showLegend = $('showLegend').checked;
+      const showGrid = $('showGrid').checked;
+      const fillArea = $('fillArea').checked;
 
-      if (!xField || !valueField) { setStatus('اختر أعمدة X و Y أولاً'); return; }
+      const isPieLike = chartTypeRaw === 'pie' || chartTypeRaw === 'doughnut';
+      const chartType = chartTypeRaw === 'area' ? 'line' : chartTypeRaw;
+
+      if (!xField || !valueField) { setStatus('اختر أعمدة X و Y من تاب "البيانات"'); return; }
 
       try {
         let chartConfig;
 
-        if (chartType === 'pie') {
+        if (isPieLike) {
           const groupKey = seriesField || xField;
           const groups = {};
           currentRecords.forEach(r => {
@@ -399,14 +547,11 @@
           const data = labels.map(l => aggregate(groups[l], aggType));
 
           chartConfig = {
-            type: 'pie',
-            data: {
-              labels,
-              datasets: [{ data, backgroundColor: labels.map((_, i) => PALETTE[i % PALETTE.length]) }]
-            },
+            type: chartTypeRaw,
+            data: { labels, datasets: [{ data, backgroundColor: labels.map((_, i) => palette[i % palette.length]), borderColor: '#0B0D12', borderWidth: 2 }] },
             options: {
               responsive: true, maintainAspectRatio: false,
-              plugins: { legend: { labels: { color: '#E7E9EE' } } }
+              plugins: { legend: { display: showLegend, labels: { color: '#E7E9EE', font: { family: 'Inter', size: 11 } } } }
             }
           };
         } else {
@@ -414,29 +559,35 @@
             .sort((a, b) => (new Date(a) - new Date(b)) || String(a).localeCompare(String(b)));
 
           let datasets = [];
+          const buildDataset = (label, data, color) => ({
+            label, data,
+            borderColor: color,
+            backgroundColor: (chartType === 'line' && (fillArea || chartTypeRaw === 'area')) ? color + '26' : color,
+            fill: chartType === 'line' && (fillArea || chartTypeRaw === 'area'),
+            spanGaps: true,
+            tension: smooth ? 0.35 : 0,
+            borderWidth: lineWidth,
+            pointRadius: chartType === 'line' ? (showPoints ? 3 : 0) : undefined,
+            pointHoverRadius: chartType === 'line' ? 5 : undefined,
+            borderRadius: chartType === 'bar' ? cornerRadius : undefined,
+            maxBarThickness: 46
+          });
 
           if (seriesField) {
             const seriesNames = [...new Set(currentRecords.map(r => r[seriesField]))];
             datasets = seriesNames.map((s, i) => {
-              const color = PALETTE[i % PALETTE.length];
               const data = xValues.map(x => {
                 const matching = currentRecords.filter(r => r[xField] === x && r[seriesField] === s).map(r => r[valueField]);
                 return matching.length ? aggregate(matching, aggType) : null;
               });
-              return {
-                label: String(s), data, borderColor: color, backgroundColor: color,
-                spanGaps: true, tension: 0.3, borderWidth: 2, pointRadius: 3
-              };
+              return buildDataset(String(s), data, palette[i % palette.length]);
             });
           } else {
             const data = xValues.map(x => {
               const matching = currentRecords.filter(r => r[xField] === x).map(r => r[valueField]);
               return matching.length ? aggregate(matching, aggType) : null;
             });
-            datasets = [{
-              label: valueField, data, borderColor: PALETTE[0], backgroundColor: PALETTE[0],
-              spanGaps: true, tension: 0.3, borderWidth: 2, pointRadius: 3
-            }];
+            datasets = [buildDataset(valueField, data, palette[0])];
           }
 
           chartConfig = {
@@ -446,12 +597,12 @@
               responsive: true, maintainAspectRatio: false,
               interaction: { mode: 'index', intersect: false },
               plugins: {
-                legend: { labels: { color: '#E7E9EE' } },
-                tooltip: { backgroundColor: '#12151C', borderColor: '#1F2430', borderWidth: 1, titleColor: '#E7E9EE', bodyColor: '#E7E9EE', padding: 10 }
+                legend: { display: showLegend, labels: { color: '#E7E9EE', font: { family: 'Inter', size: 11 } } },
+                tooltip: { backgroundColor: '#12151C', borderColor: '#232838', borderWidth: 1, titleColor: '#E7E9EE', bodyColor: '#E7E9EE', padding: 10 }
               },
               scales: {
-                x: { grid: { color: '#1F2430' }, ticks: { color: '#7A8091' } },
-                y: { grid: { color: '#1F2430' }, ticks: { color: '#7A8091' } }
+                x: { grid: { color: showGrid ? '#1B2030' : 'transparent' }, ticks: { color: '#7A8091', font: { family: 'IBM Plex Mono', size: 10 } } },
+                y: { grid: { color: showGrid ? '#1B2030' : 'transparent' }, ticks: { color: '#7A8091', font: { family: 'IBM Plex Mono', size: 10 } } }
               }
             }
           };
@@ -460,6 +611,7 @@
         if (currentChart) currentChart.destroy();
         currentChart = new Chart($('chartCanvas'), chartConfig);
         statusEl.style.display = 'none';
+        $('updatedBadge').textContent = 'آخر تحديث ' + new Date().toLocaleTimeString('ar-EG');
       } catch (err) {
         setStatus('خطأ في رسم الشارت: ' + err.message);
       }
