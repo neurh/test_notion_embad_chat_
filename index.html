@@ -225,6 +225,16 @@
           <select id="dbSelect"></select>
         </div>
         <div class="hint">الرابط محفوظ في متصفحك فقط.</div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>معرف هذا العرض (View ID)</label>
+          <input type="text" id="viewIdDisplay" readonly>
+        </div>
+        <div class="row2">
+          <button class="primary" id="copyLinkBtn" type="button">نسخ رابط هذا العرض</button>
+          <button class="primary" id="newViewBtn" type="button" style="background:var(--panel3); color:var(--text); border:1px solid var(--line);">إنشاء عرض جديد</button>
+        </div>
+        <div class="hint">كل embed تحطه في Notion لازم يكون له View ID مختلف عشان يفضل بإعداداته الخاصة. اضغط "إنشاء عرض جديد" وحط الرابط الناتج في الـ embed التاني.</div>
       </div>
 
       <!-- تاب البيانات -->
@@ -335,6 +345,20 @@
     let columns = [];
     let activePalette = 'default';
 
+    // ==== نظام الـ View: كل embed بمعرف مختلف = إعدادات منفصلة ====
+    function getViewId() {
+      const params = new URLSearchParams(location.search);
+      let v = params.get('view');
+      if (!v) {
+        v = 'view-' + Math.random().toString(36).slice(2, 8);
+        const newUrl = location.pathname + '?view=' + v;
+        history.replaceState(null, '', newUrl);
+      }
+      return v;
+    }
+    const VIEW_ID = getViewId();
+    const configKey = () => 'notion_studio_view_' + VIEW_ID;
+
     const $ = id => document.getElementById(id);
     const statusEl = $('status');
     const overlay = $('overlay');
@@ -374,9 +398,14 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
 
     window.addEventListener('load', () => {
-      const savedUrl = localStorage.getItem('notion_studio_api_url');
-      if (savedUrl) {
-        $('apiUrl').value = savedUrl;
+      $('viewIdDisplay').value = VIEW_ID;
+
+      const viewSaved = JSON.parse(localStorage.getItem(configKey()) || 'null');
+      const globalUrl = localStorage.getItem('notion_studio_api_url');
+      const apiUrlToUse = (viewSaved && viewSaved.apiUrl) || globalUrl;
+
+      if (apiUrlToUse) {
+        $('apiUrl').value = apiUrlToUse;
         connect(true);
       } else {
         overlay.classList.add('open');
@@ -384,8 +413,27 @@
       }
     });
 
+    $('copyLinkBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(location.href).then(() => {
+        $('copyLinkBtn').textContent = 'تم النسخ ✓';
+        setTimeout(() => $('copyLinkBtn').textContent = 'نسخ رابط هذا العرض', 1500);
+      });
+    });
+
+    $('newViewBtn').addEventListener('click', () => {
+      const newId = 'view-' + Math.random().toString(36).slice(2, 8);
+      const newUrl = location.origin + location.pathname + '?view=' + newId;
+      navigator.clipboard.writeText(newUrl).then(() => {
+        $('newViewBtn').textContent = 'تم نسخ الرابط الجديد ✓';
+        setTimeout(() => $('newViewBtn').textContent = 'إنشاء عرض جديد', 2000);
+      });
+    });
+
     $('connectBtn').addEventListener('click', () => connect(false));
-    $('dbSelect').addEventListener('change', onDatabaseChange);
+    $('dbSelect').addEventListener('change', async () => {
+      await onDatabaseChange(false);
+      saveConfig();
+    });
 
     const AUTO_IDS = ['chartType', 'xField', 'seriesField', 'valueField', 'aggType',
       'lineWidth', 'cornerRadius', 'smoothLines', 'showPoints', 'showLegend', 'showGrid', 'fillArea'];
@@ -418,7 +466,8 @@
 
         $('dbSelect').innerHTML = dbs.map(d => `<option value="${d.id}">${d.title}</option>`).join('');
 
-        const savedDbId = localStorage.getItem('notion_studio_last_db');
+        const viewSaved = JSON.parse(localStorage.getItem(configKey()) || 'null');
+        const savedDbId = viewSaved && viewSaved.databaseId;
         if (savedDbId && dbs.some(d => d.id === savedDbId)) $('dbSelect').value = savedDbId;
 
         await onDatabaseChange(silent);
@@ -448,7 +497,7 @@
         $('valueField').innerHTML = opts;
         $('seriesField').innerHTML = '<option value="">بدون تقسيم</option>' + opts;
 
-        const saved = JSON.parse(localStorage.getItem('notion_studio_config_' + dbId) || 'null');
+        const saved = JSON.parse(localStorage.getItem(configKey()) || 'null');
         if (saved) applySavedConfig(saved);
         else if (!silent) setStatus('اختر الأعمدة من تاب "البيانات"');
 
@@ -481,8 +530,9 @@
 
     function saveConfig() {
       const dbId = $('dbSelect').value;
-      localStorage.setItem('notion_studio_last_db', dbId);
-      localStorage.setItem('notion_studio_config_' + dbId, JSON.stringify({
+      localStorage.setItem(configKey(), JSON.stringify({
+        apiUrl: $('apiUrl').value.trim(),
+        databaseId: dbId,
         xField: $('xField').value,
         seriesField: $('seriesField').value,
         valueField: $('valueField').value,
