@@ -234,7 +234,11 @@
           <button class="primary" id="copyLinkBtn" type="button">نسخ رابط هذا العرض</button>
           <button class="primary" id="newViewBtn" type="button" style="background:var(--panel3); color:var(--text); border:1px solid var(--line);">إنشاء عرض جديد</button>
         </div>
-        <div class="hint">كل embed تحطه في Notion لازم يكون له View ID مختلف عشان يفضل بإعداداته الخاصة. اضغط "إنشاء عرض جديد" وحط الرابط الناتج في الـ embed التاني.</div>
+        <div class="field" id="linkBoxWrap" style="display:none;">
+          <label>الرابط (اضغط داخل الصندوق ثم Ctrl+C)</label>
+          <input type="text" id="linkBox" readonly onclick="this.select()">
+        </div>
+        <div class="hint">كل embed تحطه في Notion لازم يكون له View ID مختلف عشان يفضل بإعداداته الخاصة. اضغط "إنشاء عرض جديد"، انسخ الرابط اللي هيظهر، وحطه في الـ embed التاني.</div>
       </div>
 
       <!-- تاب البيانات -->
@@ -351,8 +355,12 @@
       let v = params.get('view');
       if (!v) {
         v = 'view-' + Math.random().toString(36).slice(2, 8);
-        const newUrl = location.pathname + '?view=' + v;
-        history.replaceState(null, '', newUrl);
+        try {
+          const newUrl = location.pathname + '?view=' + v;
+          history.replaceState(null, '', newUrl);
+        } catch (e) {
+          // بعض بيئات الـ iframe (زي Notion) بترفض تعديل الرابط - مش مشكلة، هنكمل عادي
+        }
       }
       return v;
     }
@@ -413,20 +421,38 @@
       }
     });
 
-    $('copyLinkBtn').addEventListener('click', () => {
-      navigator.clipboard.writeText(location.href).then(() => {
-        $('copyLinkBtn').textContent = 'تم النسخ ✓';
-        setTimeout(() => $('copyLinkBtn').textContent = 'نسخ رابط هذا العرض', 1500);
-      });
+    function showLinkBox(url) {
+      $('linkBoxWrap').style.display = 'flex';
+      $('linkBox').value = url;
+      $('linkBox').focus();
+      $('linkBox').select();
+    }
+
+    async function tryClipboard(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (e) { /* clipboard blocked (common inside Notion iframe) */ }
+      return false;
+    }
+
+    $('copyLinkBtn').addEventListener('click', async () => {
+      const url = location.href;
+      const ok = await tryClipboard(url);
+      showLinkBox(url);
+      $('copyLinkBtn').textContent = ok ? 'تم النسخ ✓' : 'انسخ يدوياً من الصندوق تحت ↓';
+      setTimeout(() => $('copyLinkBtn').textContent = 'نسخ رابط هذا العرض', 2200);
     });
 
-    $('newViewBtn').addEventListener('click', () => {
+    $('newViewBtn').addEventListener('click', async () => {
       const newId = 'view-' + Math.random().toString(36).slice(2, 8);
       const newUrl = location.origin + location.pathname + '?view=' + newId;
-      navigator.clipboard.writeText(newUrl).then(() => {
-        $('newViewBtn').textContent = 'تم نسخ الرابط الجديد ✓';
-        setTimeout(() => $('newViewBtn').textContent = 'إنشاء عرض جديد', 2000);
-      });
+      const ok = await tryClipboard(newUrl);
+      showLinkBox(newUrl);
+      $('newViewBtn').textContent = ok ? 'تم النسخ ✓' : 'انسخ يدوياً من الصندوق تحت ↓';
+      setTimeout(() => $('newViewBtn').textContent = 'إنشاء عرض جديد', 2200);
     });
 
     $('connectBtn').addEventListener('click', () => connect(false));
