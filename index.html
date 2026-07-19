@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rates Ledger</title>
+<title>Notion Chart Studio</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
 
   :root {
     --bg: #0B0D12;
     --panel: #12151C;
+    --panel2: #171B24;
     --line: #1F2430;
     --text: #E7E9EE;
     --muted: #7A8091;
@@ -24,249 +25,357 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
-    height: 100%;
+    min-height: 100%;
   }
 
-  body {
-    padding: 28px 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+  body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
 
   .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid var(--line); padding-bottom: 14px;
   }
 
   .eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 6px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 4px;
   }
 
-  h1 {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+  h1 { font-size: 20px; font-weight: 700; }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px;
   }
 
-  .updated {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    text-align: left;
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 160px; flex: 1; }
+
+  label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.05em;
+    color: var(--muted); text-transform: uppercase;
   }
 
-  .ticker-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+  input, select {
+    background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+    padding: 9px 10px; border-radius: 7px; font-family: 'Inter', sans-serif; font-size: 13px;
+    outline: none;
   }
 
-  .ticker {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 140px;
+  input:focus, select:focus { border-color: var(--accent); }
+
+  button {
+    background: var(--accent); color: #12151C; border: none; padding: 9px 16px;
+    border-radius: 7px; font-weight: 600; font-size: 13px; cursor: pointer;
+    font-family: 'Inter', sans-serif;
   }
 
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  button:hover { filter: brightness(1.08); }
 
-  .ticker-info { display: flex; flex-direction: column; gap: 2px; }
-
-  .ticker-name {
-    font-size: 12px;
-    color: var(--muted);
+  button.secondary {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--line);
   }
-
-  .ticker-value {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 15px;
-    font-weight: 600;
-  }
-
-  .ticker-delta {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-  }
-
-  .up { color: var(--up); }
-  .down { color: var(--down); }
-  .flat { color: var(--muted); }
 
   .chart-panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 20px;
-    flex: 1;
-    min-height: 320px;
-    position: relative;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; flex: 1; min-height: 360px; position: relative;
   }
 
   #status {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    text-align: center; padding: 20px;
   }
 
-  canvas { max-height: 380px; }
+  canvas { max-height: 400px; }
+
+  .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
 </style>
 </head>
 <body>
 
   <div class="header">
     <div>
-      <div class="eyebrow">Ledger · Live</div>
-      <h1>أسعار البنوك عبر الزمن</h1>
+      <div class="eyebrow">Notion · Chart Studio</div>
+      <h1>استوديو الشارتات من Notion</h1>
     </div>
-    <div class="updated" id="updated-at">— جاري التحميل —</div>
   </div>
 
-  <div class="ticker-row" id="ticker-row"></div>
+  <!-- إعداد الاتصال -->
+  <div class="panel">
+    <div class="row">
+      <div class="field" style="flex: 3;">
+        <label>Web App URL</label>
+        <input id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+      <div class="field" style="flex: 0 0 auto;">
+        <button id="connectBtn">اتصال وجلب القواعد</button>
+      </div>
+    </div>
+    <div class="hint">هذا الرابط بياتك محفوظ في المتصفح بس، مش بيتشارك مع حد.</div>
+  </div>
+
+  <!-- اختيار قاعدة البيانات والأعمدة -->
+  <div class="panel" id="configPanel" style="display:none;">
+    <div class="row">
+      <div class="field">
+        <label>قاعدة البيانات</label>
+        <select id="dbSelect"></select>
+      </div>
+      <div class="field">
+        <label>نوع الشارت</label>
+        <select id="chartType">
+          <option value="line">خطي (Line)</option>
+          <option value="bar">أعمدة (Bar)</option>
+          <option value="pie">دائري (Pie)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>المحور الأفقي / التصنيف (X)</label>
+        <select id="xField"></select>
+      </div>
+      <div class="field">
+        <label>التقسيم حسب (Series) — اختياري</label>
+        <select id="seriesField">
+          <option value="">بدون تقسيم</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>القيمة (Y)</label>
+        <select id="valueField"></select>
+      </div>
+      <div class="field">
+        <label>التجميع</label>
+        <select id="aggType">
+          <option value="sum">مجموع</option>
+          <option value="avg">متوسط</option>
+          <option value="count">عدد</option>
+          <option value="last">آخر قيمة</option>
+        </select>
+      </div>
+      <div class="field" style="flex: 0 0 auto;">
+        <button id="renderBtn">ارسم الشارت</button>
+      </div>
+    </div>
+  </div>
 
   <div class="chart-panel">
-    <div id="status">جاري سحب البيانات...</div>
-    <canvas id="ratesChart"></canvas>
+    <div id="status">ابدأ بإدخال رابط الـ Web App واضغط "اتصال"</div>
+    <canvas id="chartCanvas"></canvas>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <!-- المكتبة محمّلة محلياً من نفس المجلد -->
+  <script src="chart.umd.js"></script>
   <script>
-    // ==== عدّل هذا الرابط بـ Web App URL بتاعك من Apps Script ====
-    const API_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTU6oQSUo99QfZqwMwmcIj5Vkwfq7x8df_zSldsjWmd6E8ywMLUIRlMLfoT0YEWjHbrjOg8JpmdDG61_i9hMEsQ6XBgG_YoTHtaQegBofFYrGZLyCc_1NvHcbi891-aAjNm9pnfbBpf8qkyyxv_jMSyVvEVTIRU17IeZDmgBWDIyqvZnYHF9N9JRkjs30erDTCwBhZDrKAaeJ3dO9upadICql7X49WJUdYexPT3mVybljdbFQez5QXk7_dW6gV5j36gGkVBFYeuU2taB1SUY6OXC-b1-Q&lib=Mb3MwuPSxgt9RSRzXxsv_sUzMLqrx7Omp"
     const PALETTE = ["#5B8DEF", "#E8687A", "#4DBE8E", "#D4A24C", "#B98EFF", "#4DD9C0", "#F0A868", "#8A93A6"];
+    let currentChart = null;
+    let currentRecords = [];
+    let columns = [];
 
-    async function loadData() {
-      const statusEl = document.getElementById('status');
+    const $ = id => document.getElementById(id);
+    const statusEl = $('status');
+
+    // ==== تحميل الإعدادات المحفوظة ====
+    window.addEventListener('load', () => {
+      const savedUrl = localStorage.getItem('notion_studio_api_url');
+      if (savedUrl) {
+        $('apiUrl').value = savedUrl;
+        connect();
+      }
+    });
+
+    $('connectBtn').addEventListener('click', connect);
+    $('dbSelect').addEventListener('change', onDatabaseChange);
+    $('renderBtn').addEventListener('click', () => {
+      saveConfig();
+      renderChart();
+    });
+
+    async function connect() {
+      const apiUrl = $('apiUrl').value.trim();
+      if (!apiUrl) { setStatus('من فضلك أدخل رابط الـ Web App'); return; }
+      localStorage.setItem('notion_studio_api_url', apiUrl);
+
+      setStatus('جاري جلب قواعد البيانات...');
       try {
-        const res = await fetch(API_URL);
-        const raw = await res.json();
+        const res = await fetch(apiUrl + '?action=list_databases');
+        const dbs = await res.json();
+        if (dbs.error) throw new Error(JSON.stringify(dbs.error));
+        if (!Array.isArray(dbs) || dbs.length === 0) {
+          throw new Error('لا توجد قواعد بيانات موصولة. تأكد إنك ربطت الـ integration بالـ database من Notion (Connections).');
+        }
 
-        if (raw.error) throw new Error(JSON.stringify(raw.error));
-        if (!Array.isArray(raw) || raw.length === 0) throw new Error("لا توجد بيانات");
+        $('dbSelect').innerHTML = dbs.map(d => `<option value="${d.id}">${d.title}</option>`).join('');
+        $('configPanel').style.display = 'block';
 
-        renderTickers(raw);
-        renderChart(raw);
-        document.getElementById('updated-at').textContent =
-          "آخر تحديث: " + new Date().toLocaleString('ar-EG');
-        statusEl.style.display = 'none';
+        const savedDbId = localStorage.getItem('notion_studio_last_db');
+        if (savedDbId && dbs.some(d => d.id === savedDbId)) {
+          $('dbSelect').value = savedDbId;
+        }
+        await onDatabaseChange();
       } catch (err) {
-        statusEl.textContent = "خطأ في تحميل البيانات: " + err.message;
+        setStatus('خطأ: ' + err.message);
       }
     }
 
-    function groupByBank(records) {
-      const banks = {};
-      records.forEach(r => {
-        if (!banks[r.bank]) banks[r.bank] = [];
-        banks[r.bank].push(r);
-      });
-      Object.values(banks).forEach(arr => arr.sort((a, b) => new Date(a.date) - new Date(b.date)));
-      return banks;
-    }
+    async function onDatabaseChange() {
+      const apiUrl = $('apiUrl').value.trim();
+      const dbId = $('dbSelect').value;
+      if (!dbId) return;
 
-    function renderTickers(records) {
-      const banks = groupByBank(records);
-      const row = document.getElementById('ticker-row');
-      row.innerHTML = '';
-
-      Object.keys(banks).forEach((bank, i) => {
-        const series = banks[bank];
-        const last = series[series.length - 1].rate;
-        const prev = series.length > 1 ? series[series.length - 2].rate : last;
-        const delta = last - prev;
-        const trendClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
-        const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '—';
-
-        const el = document.createElement('div');
-        el.className = 'ticker';
-        el.innerHTML = `
-          <div class="dot" style="background:${PALETTE[i % PALETTE.length]}"></div>
-          <div class="ticker-info">
-            <div class="ticker-name">${bank}</div>
-            <div class="ticker-value">${last}</div>
-            <div class="ticker-delta ${trendClass}">${arrow} ${Math.abs(delta).toFixed(2)}</div>
-          </div>`;
-        row.appendChild(el);
-      });
-    }
-
-    function renderChart(records) {
-      const banks = groupByBank(records);
-      const allDates = [...new Set(records.map(r => r.date))].sort((a, b) => new Date(a) - new Date(b));
-
-      const datasets = Object.keys(banks).map((bank, i) => {
-        const color = PALETTE[i % PALETTE.length];
-        const map = {};
-        banks[bank].forEach(r => map[r.date] = r.rate);
-        return {
-          label: bank,
-          data: allDates.map(d => map[d] ?? null),
-          borderColor: color,
-          backgroundColor: color,
-          spanGaps: true,
-          tension: 0.3,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          borderWidth: 2
-        };
-      });
-
-      new Chart(document.getElementById('ratesChart'), {
-        type: 'line',
-        data: {
-          labels: allDates.map(d => new Date(d).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })),
-          datasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: {
-              labels: { color: '#E7E9EE', font: { family: 'Inter', size: 12 } }
-            },
-            tooltip: {
-              backgroundColor: '#12151C',
-              borderColor: '#1F2430',
-              borderWidth: 1,
-              titleColor: '#E7E9EE',
-              bodyColor: '#E7E9EE',
-              padding: 10
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: '#1F2430' },
-              ticks: { color: '#7A8091', font: { family: 'IBM Plex Mono', size: 10 } }
-            },
-            y: {
-              grid: { color: '#1F2430' },
-              ticks: { color: '#7A8091', font: { family: 'IBM Plex Mono', size: 10 } }
-            }
-          }
+      setStatus('جاري تحميل البيانات...');
+      try {
+        const res = await fetch(apiUrl + '?action=get_data&database_id=' + encodeURIComponent(dbId));
+        const records = await res.json();
+        if (records.error) throw new Error(JSON.stringify(records.error));
+        if (!Array.isArray(records) || records.length === 0) {
+          throw new Error('لا توجد صفوف في هذه القاعدة.');
         }
-      });
+
+        currentRecords = records;
+        columns = Object.keys(records[0]);
+
+        const opts = columns.map(c => `<option value="${c}">${c}</option>`).join('');
+        $('xField').innerHTML = opts;
+        $('valueField').innerHTML = opts;
+        $('seriesField').innerHTML = '<option value="">بدون تقسيم</option>' + opts;
+
+        // استرجاع آخر إعداد محفوظ لنفس القاعدة
+        const saved = JSON.parse(localStorage.getItem('notion_studio_config_' + dbId) || 'null');
+        if (saved) {
+          $('xField').value = saved.xField || columns[0];
+          $('seriesField').value = saved.seriesField || '';
+          $('valueField').value = saved.valueField || columns[0];
+          $('chartType').value = saved.chartType || 'line';
+          $('aggType').value = saved.aggType || 'sum';
+          renderChart();
+        } else {
+          setStatus('اختر الأعمدة واضغط "ارسم الشارت"');
+        }
+      } catch (err) {
+        setStatus('خطأ: ' + err.message);
+      }
     }
 
-    loadData();
-    setInterval(loadData, 5 * 60 * 1000); // يحدث كل 5 دقائق
+    function saveConfig() {
+      const dbId = $('dbSelect').value;
+      localStorage.setItem('notion_studio_last_db', dbId);
+      localStorage.setItem('notion_studio_config_' + dbId, JSON.stringify({
+        xField: $('xField').value,
+        seriesField: $('seriesField').value,
+        valueField: $('valueField').value,
+        chartType: $('chartType').value,
+        aggType: $('aggType').value
+      }));
+    }
+
+    function aggregate(values, type) {
+      const nums = values.map(v => Number(v)).filter(v => !isNaN(v));
+      if (type === 'count') return values.length;
+      if (nums.length === 0) return 0;
+      if (type === 'sum') return nums.reduce((a, b) => a + b, 0);
+      if (type === 'avg') return nums.reduce((a, b) => a + b, 0) / nums.length;
+      if (type === 'last') return nums[nums.length - 1];
+      return nums.reduce((a, b) => a + b, 0);
+    }
+
+    function renderChart() {
+      const xField = $('xField').value;
+      const seriesField = $('seriesField').value;
+      const valueField = $('valueField').value;
+      const chartType = $('chartType').value;
+      const aggType = $('aggType').value;
+
+      if (!xField || !valueField) { setStatus('اختر أعمدة X و Y أولاً'); return; }
+
+      try {
+        let chartConfig;
+
+        if (chartType === 'pie') {
+          const groupKey = seriesField || xField;
+          const groups = {};
+          currentRecords.forEach(r => {
+            const key = String(r[groupKey] ?? '');
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(r[valueField]);
+          });
+          const labels = Object.keys(groups);
+          const data = labels.map(l => aggregate(groups[l], aggType));
+
+          chartConfig = {
+            type: 'pie',
+            data: {
+              labels,
+              datasets: [{ data, backgroundColor: labels.map((_, i) => PALETTE[i % PALETTE.length]) }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { labels: { color: '#E7E9EE' } } }
+            }
+          };
+        } else {
+          // line / bar
+          const xValues = [...new Set(currentRecords.map(r => r[xField]))]
+            .sort((a, b) => (new Date(a) - new Date(b)) || String(a).localeCompare(String(b)));
+
+          let datasets = [];
+
+          if (seriesField) {
+            const seriesNames = [...new Set(currentRecords.map(r => r[seriesField]))];
+            datasets = seriesNames.map((s, i) => {
+              const color = PALETTE[i % PALETTE.length];
+              const data = xValues.map(x => {
+                const matching = currentRecords.filter(r => r[xField] === x && r[seriesField] === s).map(r => r[valueField]);
+                return matching.length ? aggregate(matching, aggType) : null;
+              });
+              return {
+                label: String(s), data, borderColor: color, backgroundColor: color,
+                spanGaps: true, tension: 0.3, borderWidth: 2, pointRadius: 3
+              };
+            });
+          } else {
+            const data = xValues.map(x => {
+              const matching = currentRecords.filter(r => r[xField] === x).map(r => r[valueField]);
+              return matching.length ? aggregate(matching, aggType) : null;
+            });
+            datasets = [{
+              label: valueField, data, borderColor: PALETTE[0], backgroundColor: PALETTE[0],
+              spanGaps: true, tension: 0.3, borderWidth: 2, pointRadius: 3
+            }];
+          }
+
+          chartConfig = {
+            type: chartType,
+            data: { labels: xValues.map(x => String(x)), datasets },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
+              plugins: {
+                legend: { labels: { color: '#E7E9EE' } },
+                tooltip: { backgroundColor: '#12151C', borderColor: '#1F2430', borderWidth: 1, titleColor: '#E7E9EE', bodyColor: '#E7E9EE', padding: 10 }
+              },
+              scales: {
+                x: { grid: { color: '#1F2430' }, ticks: { color: '#7A8091' } },
+                y: { grid: { color: '#1F2430' }, ticks: { color: '#7A8091' } }
+              }
+            }
+          };
+        }
+
+        if (currentChart) currentChart.destroy();
+        currentChart = new Chart($('chartCanvas'), chartConfig);
+        statusEl.style.display = 'none';
+      } catch (err) {
+        setStatus('خطأ في رسم الشارت: ' + err.message);
+      }
+    }
+
+    function setStatus(msg) {
+      statusEl.style.display = 'flex';
+      statusEl.textContent = msg;
+    }
   </script>
 </body>
 </html>
